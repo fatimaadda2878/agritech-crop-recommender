@@ -1,0 +1,143 @@
+# 🌾 Agritech Crop Recommender
+
+Application d'aide à la décision pour les agriculteurs, développée pour **Agritech Answers**. Elle combine :
+
+- une **fonction de prédiction** : rendement estimé (t/ha) pour une culture choisie, selon les conditions d'une parcelle ;
+- une **fonction de recommandation** : classement des 6 cultures possibles (blé, orge, coton, maïs, riz, soja) par rendement estimé, pour les conditions d'une parcelle donnée.
+
+[![CI/CD - Agritech Crop Recommender](https://github.com/REMPLACER_PAR_VOTRE_USER/agritech-crop-recommender/actions/workflows/ci-cd.yml/badge.svg)](https://github.com/REMPLACER_PAR_VOTRE_USER/agritech-crop-recommender/actions/workflows/ci-cd.yml)
+
+## Architecture
+
+```
+                    ┌──────────────────────┐
+                    │   Données brutes     │
+                    │  (crop_yield.csv +   │
+                    │   yield_df.csv)      │
+                    └──────────┬───────────┘
+                               │ src/data_prep.py
+                               ▼
+                    ┌──────────────────────┐
+                    │  Dataset consolidé   │
+                    │ data/processed/*.csv │
+                    └──────────┬───────────┘
+                               │ src/train.py (+ MLflow)
+                               ▼
+                    ┌──────────────────────┐
+                    │  Modèle entraîné     │
+                    │  models/model.pkl    │
+                    └──────────┬───────────┘
+                               │ copié dans
+                               ▼
+        ┌───────────────────────────────────────┐
+        │        api/  (FastAPI, Docker)         │
+        │   POST /predict     POST /recommend    │
+        └──────────────────┬──────────────────────┘
+                            │ requêtes HTTP
+                            ▼
+        ┌───────────────────────────────────────┐
+        │        app/ (Streamlit)                │
+        │   Interface agriculteur                │
+        └───────────────────────────────────────┘
+```
+
+## Structure du dépôt
+
+```
+├── data/
+│   ├── raw/                  # Données brutes (non versionnées, voir "Récupérer les données")
+│   └── processed/            # Dataset consolidé (généré, non versionné)
+├── notebooks/
+│   └── 01_data_merging_eda.ipynb   # Exploration, fusion des 2 datasets, ACP
+├── src/
+│   ├── data_prep.py           # Logique de fusion/nettoyage (partagée notebook + training)
+│   └── train.py                # Entraînement, comparaison, optimisation, suivi MLflow
+├── api/
+│   ├── main.py                 # API FastAPI (/predict, /recommend, /metadata, /health)
+│   ├── schemas.py               # Schémas Pydantic
+│   ├── models/                  # Modèle + métadonnées servis par l'API
+│   ├── Dockerfile
+│   └── requirements.txt
+├── app/
+│   ├── app.py                   # Application Streamlit (front-end)
+│   └── requirements.txt
+├── tests/
+│   └── test_api.py              # Tests unitaires pytest de l'API
+├── .github/workflows/ci-cd.yml  # Pipeline CI/CD GitHub Actions
+├── docs/CI_CD.md                # Documentation détaillée du pipeline
+├── reports/                     # Figures, comparatif de modèles, rapport métier PDF
+├── mlflow_screenshots/          # Captures d'écran MLflow (preuves d'expérimentation)
+└── requirements.txt              # Dépendances du pipeline data/ML
+```
+
+## Récupérer les données
+
+Les fichiers de données bruts ne sont pas versionnés dans Git (volume trop important). Pour reconstituer `data/raw/` :
+
+1. `Agriculture CropYield Dataset` → placer `crop_yield.csv` dans `data/raw/`.
+2. `CropYield Prediction Dataset` → placer `yield_df.csv` dans `data/raw/`.
+
+Puis reconstruire le dataset consolidé et le modèle :
+
+```bash
+pip install -r requirements.txt
+python src/data_prep.py     # écrit data/processed/merged_dataset.csv
+python src/train.py         # entraîne le modèle, écrit models/ et suit les runs dans MLflow
+```
+
+## Lancer le projet en local
+
+### 1. L'API
+
+```bash
+cd api
+pip install -r requirements.txt
+uvicorn main:app --reload --port 8000
+```
+
+Documentation interactive : http://localhost:8000/docs
+
+### 2. L'application Streamlit
+
+```bash
+cd app
+pip install -r requirements.txt
+API_URL=http://localhost:8000 streamlit run app.py
+```
+
+### 3. Avec Docker (API uniquement)
+
+```bash
+cd api
+docker build -t agritech-crop-api .
+docker run -p 8000:8000 agritech-crop-api
+```
+
+### 4. Visualiser les expérimentations MLflow
+
+```bash
+mlflow ui --backend-store-uri sqlite:///mlflow.db --port 5000
+```
+
+## Tests
+
+```bash
+pip install -r api/requirements.txt pytest httpx
+pytest tests/ -v
+```
+
+## Notebooks et rapport
+
+- `notebooks/01_data_merging_eda.ipynb` : exploration des 2 sources, stratégie de fusion justifiée, ACP complète (cercle des corrélations, scree plot, projection des individus).
+- `reports/rapport_metier.pdf` : rapport de synthèse pour public non technique (résultats, variables clés, recommandations agronomiques, captures MLflow).
+- `reports/model_comparison.csv` : comparatif chiffré des modèles testés.
+
+## CI/CD
+
+Voir [`docs/CI_CD.md`](docs/CI_CD.md) pour le détail du pipeline (tests → build Docker → publication Docker Hub sur `main`).
+
+## Choix méthodologiques principaux
+
+- **Fusion des données** : les deux jeux de données ne partagent pas de clé pays/année (absente du dataset parcelle) ; la fusion se fait donc par culture, en enrichissant chaque parcelle avec des benchmarks climatiques/agronomiques mondiaux calculés à partir des données FAO.
+- **Échantillonnage d'entraînement** : 200 000 parcelles (sur 1 000 000) pour l'entraînement/optimisation, un choix documenté dans `src/train.py` et justifié par la stabilité des métriques obtenues.
+- **Modèle retenu** : régression Ridge optimisée (RMSE ≈ 0,50 t/ha, R² ≈ 0,915), choisie pour sa simplicité et son interprétabilité à performance égale avec des modèles plus complexes (Random Forest, Gradient Boosting).
