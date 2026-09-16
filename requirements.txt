@@ -1,0 +1,17 @@
+# Dépendances du pipeline de préparation des données et d'entraînement
+# (src/data_prep.py, src/train.py, notebooks/). Pour l'API et l'app
+# Streamlit, voir api/requirements.txt et app/requirements.txt (plus légers,
+# utilisés pour le déploiement).
+pandas==3.0.2
+numpy==2.4.4
+scikit-learn==1.8.0
+matplotlib==3.10.9
+seaborn==0.13.2
+scipy==1.17.1
+mlflow==3.16.0
+joblib==1.5.3
+jupyter==1.1.1
+nbformat==5.11.1
+nbconvert==7.17.1
+pytest==9.1.1
+httpx==0.28.1

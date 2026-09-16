@@ -1,0 +1,61 @@
+{
+  "best_model_type": "ridge_regression",
+  "best_params": {
+    "model__solver": "cholesky",
+    "model__alpha": 1.0
+  },
+  "metrics": {
+    "rmse": 0.4987183172292971,
+    "mae": 0.39799960139051266,
+    "r2": 0.9150686897507445
+  },
+  "mlflow_run_id": "cfc72ecf220f484cb05a6a011e82f3ad",
+  "mlflow_experiment": "crop_yield_prediction",
+  "feature_columns": [
+    "Rainfall_mm",
+    "Temperature_Celsius",
+    "Days_to_Harvest",
+    "world_avg_rainfall_mm",
+    "world_avg_temp_c",
+    "world_avg_pesticides_tonnes",
+    "world_avg_yield_t_ha",
+    "rainfall_gap_pct",
+    "Fertilizer_Used",
+    "Irrigation_Used",
+    "Region",
+    "Soil_Type",
+    "Weather_Condition",
+    "Crop"
+  ],
+  "target_column": "Yield_tons_per_hectare",
+  "valid_crops": [
+    "Barley",
+    "Cotton",
+    "Maize",
+    "Rice",
+    "Soybean",
+    "Wheat"
+  ],
+  "valid_regions": [
+    "West",
+    "South",
+    "North",
+    "East"
+  ],
+  "valid_soil_types": [
+    "Sandy",
+    "Clay",
+    "Loam",
+    "Silt",
+    "Peaty",
+    "Chalky"
+  ],
+  "valid_weather": [
+    "Cloudy",
+    "Rainy",
+    "Sunny"
+  ],
+  "trained_on_rows": 200000,
+  "trained_on_total_dataset_rows": 1000000,
+  "seed": 42
+}

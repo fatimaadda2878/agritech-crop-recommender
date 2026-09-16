@@ -1,0 +1,47 @@
+"""Exploration rapide des deux jeux de données bruts."""
+import pandas as pd
+
+pd.set_option("display.width", 140)
+pd.set_option("display.max_columns", 20)
+
+RAW = "data/raw"
+
+print("=" * 80)
+print("AGRICULTURE CROP YIELD DATASET (crop_yield.csv)")
+print("=" * 80)
+df1 = pd.read_csv(f"{RAW}/crop_yield.csv")
+print("Shape:", df1.shape)
+print(df1.dtypes)
+print("\nValeurs manquantes:\n", df1.isna().sum())
+print("\nRegions:", df1["Region"].unique())
+print("Soil types:", df1["Soil_Type"].unique())
+print("Crops:", sorted(df1["Crop"].unique()))
+print("Weather:", df1["Weather_Condition"].unique())
+print("Fertilizer_Used:", df1["Fertilizer_Used"].unique())
+print("Irrigation_Used:", df1["Irrigation_Used"].unique())
+print("\nDescribe numeriques:\n", df1.describe())
+print("\nDoublons:", df1.duplicated().sum())
+
+print()
+print("=" * 80)
+print("CROP YIELD PREDICTION DATASET (yield_df.csv)")
+print("=" * 80)
+df2 = pd.read_csv(f"{RAW}/yield_df.csv", index_col=0)
+print("Shape:", df2.shape)
+print(df2.dtypes)
+print("\nValeurs manquantes:\n", df2.isna().sum())
+print("\nNb pays (Area):", df2["Area"].nunique())
+print("Cultures (Item):", sorted(df2["Item"].unique()))
+print("Annees:", df2["Year"].min(), "-", df2["Year"].max())
+print("\nDescribe numeriques:\n", df2.describe())
+print("\nDoublons:", df2.duplicated().sum())
+
+print()
+print("=" * 80)
+print("Correspondance des noms de cultures entre les 2 datasets")
+print("=" * 80)
+crops1 = set(c.strip().lower() for c in df1["Crop"].unique())
+crops2 = set(c.strip().lower() for c in df2["Item"].unique())
+print("Dataset 1 (crop_yield):", sorted(crops1))
+print("Dataset 2 (yield_df) :", sorted(crops2))
+print("Intersection directe :", sorted(crops1 & crops2))
