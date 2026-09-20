@@ -73,16 +73,20 @@ jobs:
   # ------------------------------------------------------------------
   # 3) DÉPLOIEMENT (optionnel) — publie l'image sur Docker Hub quand le
   #    code est fusionné sur main. Nécessite les secrets du dépôt GitHub :
-  #    DOCKERHUB_USERNAME et DOCKERHUB_TOKEN.
-  #    Streamlit Community Cloud se redéploie automatiquement dès qu'un
-  #    push atteint la branche main (aucune étape supplémentaire requise
-  #    une fois l'application connectée à ce dépôt sur share.streamlit.io).
+  #    DOCKERHUB_USERNAME et DOCKERHUB_TOKEN. Ce job est ignoré (pas en
+  #    échec) tant que ces secrets ne sont pas configurés : ce n'est
+  #    qu'une démonstration optionnelle, le déploiement réel de l'API se
+  #    fait sur Render et celui du front sur Streamlit Community Cloud
+  #    (voir README), tous deux connectés directement à ce dépôt GitHub
+  #    et donc indépendants de ce job.
   # ------------------------------------------------------------------
   deploy:
-    name: Publication sur Docker Hub
+    name: Publication sur Docker Hub (optionnel)
     runs-on: ubuntu-latest
     needs: build
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    if: >
+      github.event_name == 'push' && github.ref == 'refs/heads/main' &&
+      vars.ENABLE_DOCKERHUB_DEPLOY == 'true'
     steps:
       - name: Récupération du code
         uses: actions/checkout@v4

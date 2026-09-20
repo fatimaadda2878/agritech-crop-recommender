@@ -113,7 +113,35 @@ docker build -t agritech-crop-api .
 docker run -p 8000:8000 agritech-crop-api
 ```
 
-### 4. Visualiser les expérimentations MLflow
+### 4. Déploiement en ligne (gratuit)
+
+Docker Hub sert seulement à stocker une image, pas à l'exécuter publiquement :
+c'est pour ça qu'un déploiement réel utilise une vraie plateforme d'hébergement.
+Ici, l'API et l'interface sont déployées gratuitement sur deux plateformes
+différentes, chacune connectée directement à ce dépôt GitHub :
+
+**API (FastAPI) sur [Render](https://render.com) :**
+1. Créer un compte gratuit sur render.com (connexion avec GitHub conseillée).
+2. *New +* → *Web Service* → sélectionner ce dépôt.
+3. *Environment* : `Docker`, *Root Directory* : `api`, plan `Free`.
+4. Render construit `api/Dockerfile` et fournit une URL publique (ex.
+   `https://agritech-crop-api.onrender.com`). Elle se redéploie automatiquement
+   à chaque push sur `main`. Le service gratuit se met en veille après 15 min
+   d'inactivité et se réveille en ~1 minute au premier appel suivant.
+
+**Interface (Streamlit) sur [Streamlit Community Cloud](https://share.streamlit.io) :**
+1. Se connecter avec son compte GitHub sur share.streamlit.io.
+2. *New app* → sélectionner ce dépôt, branche `main`, fichier principal
+   `app/app.py`.
+3. Dans *Advanced settings*, ajouter la variable d'environnement
+   `API_URL` = URL Render obtenue à l'étape précédente.
+4. Déployer : l'application se redéploie automatiquement à chaque push sur
+   `main`, sans limite de temps sur l'offre gratuite.
+
+Le job optionnel `deploy` du pipeline CI/CD (publication Docker Hub) reste
+désactivé par défaut ; voir [`docs/CI_CD.md`](docs/CI_CD.md) pour l'activer si besoin.
+
+### 5. Visualiser les expérimentations MLflow
 
 ```bash
 mlflow ui --backend-store-uri sqlite:///mlflow.db --port 5000
