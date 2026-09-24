@@ -7,6 +7,14 @@ Application d'aide à la décision pour les agriculteurs, développée pour **Ag
 
 [![CI/CD - Agritech Crop Recommender](https://github.com/fatimaadda2878/agritech-crop-recommender/actions/workflows/ci-cd.yml/badge.svg)](https://github.com/fatimaadda2878/agritech-crop-recommender/actions/workflows/ci-cd.yml)
 
+## 🚀 Démo en ligne
+
+**API déployée sur Render : [https://agritech-crop-api.onrender.com/docs](https://agritech-crop-api.onrender.com/docs)**
+
+Cette page interactive (Swagger) permet de tester directement les endpoints : ouvrir `/predict` ou `/recommend`, cliquer sur *Try it out*, modifier les valeurs d'exemple puis *Execute*.
+
+> ℹ️ Hébergement gratuit : le service se met en veille après 15 minutes d'inactivité. Le premier appel peut donc prendre environ une minute, le temps qu'il redémarre.
+
 ## Architecture
 
 ```
