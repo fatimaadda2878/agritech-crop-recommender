@@ -41,14 +41,14 @@ L'application Streamlit interroge l'API Render à chaque prédiction.
                                │ copié dans
                                ▼
         ┌───────────────────────────────────────┐
-        │        api/  (FastAPI, Docker)         │
-        │   POST /predict     POST /recommend    │
-        └──────────────────┬──────────────────────┘
+        │        api/  (FastAPI, Docker)        │
+        │   POST /predict     POST /recommend   │
+        └──────────────────┬────────────────────┘
                             │ requêtes HTTP
                             ▼
         ┌───────────────────────────────────────┐
-        │        app/ (Streamlit)                │
-        │   Interface agriculteur                │
+        │        app/ (Streamlit)               │
+        │   Interface agriculteur               │
         └───────────────────────────────────────┘
 ```
 
