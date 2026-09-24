@@ -103,7 +103,7 @@ pip install -r requirements.txt
 uvicorn main:app --reload --port 8000
 ```
 
-Documentation interactive : http://localhost:8000/docs
+Une fois l'API lancée sur votre machine, sa documentation interactive est accessible à l'adresse `http://localhost:8000/docs` (uniquement pendant que l'API tourne en local). Pour tester sans rien installer, utiliser la [version en ligne](https://agritech-crop-api.onrender.com/docs).
 
 ### 2. L'application Streamlit
 
