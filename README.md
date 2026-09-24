@@ -9,11 +9,14 @@ Application d'aide à la décision pour les agriculteurs, développée pour **Ag
 
 ## 🚀 Démo en ligne
 
-**API déployée sur Render : [https://agritech-crop-api.onrender.com/docs](https://agritech-crop-api.onrender.com/docs)**
+- **Application (Streamlit Community Cloud) : [https://agritech-crop-recommender-api.streamlit.app/](https://agritech-crop-recommender-api.streamlit.app/)**
+  Interface agriculteur : renseigner les conditions de la parcelle dans le panneau de gauche, puis choisir *Prédiction* (rendement d'une culture) ou *Recommandation* (classement des 6 cultures).
+- **API (Render) : [https://agritech-crop-api.onrender.com/docs](https://agritech-crop-api.onrender.com/docs)**
+  Documentation interactive (Swagger) : ouvrir `/predict` ou `/recommend`, cliquer sur *Try it out*, modifier les valeurs d'exemple puis *Execute*.
 
-Cette page interactive (Swagger) permet de tester directement les endpoints : ouvrir `/predict` ou `/recommend`, cliquer sur *Try it out*, modifier les valeurs d'exemple puis *Execute*.
+L'application Streamlit interroge l'API Render à chaque prédiction.
 
-> ℹ️ Hébergement gratuit : le service se met en veille après 15 minutes d'inactivité. Le premier appel peut donc prendre environ une minute, le temps qu'il redémarre.
+> ℹ️ Hébergement gratuit : les services se mettent en veille après une période d'inactivité. Le premier appel peut donc prendre environ une minute, le temps qu'ils redémarrent.
 
 ## Architecture
 
@@ -125,7 +128,9 @@ docker run -p 8000:8000 agritech-crop-api
 
 Docker Hub sert seulement à stocker une image, pas à l'exécuter publiquement :
 c'est pour ça qu'un déploiement réel utilise une vraie plateforme d'hébergement.
-Ici, l'API est déployée gratuitement, connectée directement à ce dépôt GitHub :
+Ici, l'API et l'interface sont déployées gratuitement sur deux plateformes,
+chacune connectée directement à ce dépôt GitHub et redéployée automatiquement
+à chaque push sur `main` :
 
 **API (FastAPI) sur [Render](https://render.com) :**
 1. Créer un compte gratuit sur render.com (connexion avec GitHub conseillée).
@@ -136,16 +141,16 @@ Ici, l'API est déployée gratuitement, connectée directement à ce dépôt Git
    à chaque push sur `main`. Le service gratuit se met en veille après 15 min
    d'inactivité et se réveille en ~1 minute au premier appel suivant.
 
-**Interface (Streamlit) :** la procédure normale est identique à celle de
-l'API — [Streamlit Community Cloud](https://share.streamlit.io), connecté à
-ce dépôt (branche `main`, fichier principal `app/app.py`, variable
-`API_URL` pointant vers l'URL Render). En pratique, un bug côté plateforme
-Streamlit Community Cloud (erreur d'association de compte, reproductible
-avec plusieurs comptes/navigateurs) a empêché d'obtenir une URL publique
-pour cette interface au moment de ce projet. L'API, elle, est bien déployée
-et accessible publiquement. En attendant, l'interface se lance en local en
-pointant directement vers l'API en ligne, ce qui donne une application
-complète et fonctionnelle de bout en bout :
+**Interface (Streamlit) sur [Streamlit Community Cloud](https://share.streamlit.io) :**
+1. Se connecter avec son compte GitHub sur share.streamlit.io.
+2. *Create app* → sélectionner ce dépôt, branche `main`, fichier principal
+   `app/app.py`.
+3. Dans *Advanced settings* → *Secrets*, ajouter :
+   `API_URL = "https://agritech-crop-api.onrender.com"`
+4. Déployer. L'application est accessible sur
+   [https://agritech-crop-recommender-api.streamlit.app/](https://agritech-crop-recommender-api.streamlit.app/).
+
+L'interface peut aussi être lancée en local tout en interrogeant l'API en ligne :
 
 ```bash
 cd app
