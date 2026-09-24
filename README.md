@@ -5,7 +5,7 @@ Application d'aide à la décision pour les agriculteurs, développée pour **Ag
 - une **fonction de prédiction** : rendement estimé (t/ha) pour une culture choisie, selon les conditions d'une parcelle ;
 - une **fonction de recommandation** : classement des 6 cultures possibles (blé, orge, coton, maïs, riz, soja) par rendement estimé, pour les conditions d'une parcelle donnée.
 
-[![CI/CD - Agritech Crop Recommender](https://github.com/REMPLACER_PAR_VOTRE_USER/agritech-crop-recommender/actions/workflows/ci-cd.yml/badge.svg)](https://github.com/REMPLACER_PAR_VOTRE_USER/agritech-crop-recommender/actions/workflows/ci-cd.yml)
+[![CI/CD - Agritech Crop Recommender](https://github.com/fatimaadda2878/agritech-crop-recommender/actions/workflows/ci-cd.yml/badge.svg)](https://github.com/fatimaadda2878/agritech-crop-recommender/actions/workflows/ci-cd.yml)
 
 ## Architecture
 
@@ -117,8 +117,7 @@ docker run -p 8000:8000 agritech-crop-api
 
 Docker Hub sert seulement à stocker une image, pas à l'exécuter publiquement :
 c'est pour ça qu'un déploiement réel utilise une vraie plateforme d'hébergement.
-Ici, l'API et l'interface sont déployées gratuitement sur deux plateformes
-différentes, chacune connectée directement à ce dépôt GitHub :
+Ici, l'API est déployée gratuitement, connectée directement à ce dépôt GitHub :
 
 **API (FastAPI) sur [Render](https://render.com) :**
 1. Créer un compte gratuit sur render.com (connexion avec GitHub conseillée).
@@ -129,14 +128,22 @@ différentes, chacune connectée directement à ce dépôt GitHub :
    à chaque push sur `main`. Le service gratuit se met en veille après 15 min
    d'inactivité et se réveille en ~1 minute au premier appel suivant.
 
-**Interface (Streamlit) sur [Streamlit Community Cloud](https://share.streamlit.io) :**
-1. Se connecter avec son compte GitHub sur share.streamlit.io.
-2. *New app* → sélectionner ce dépôt, branche `main`, fichier principal
-   `app/app.py`.
-3. Dans *Advanced settings*, ajouter la variable d'environnement
-   `API_URL` = URL Render obtenue à l'étape précédente.
-4. Déployer : l'application se redéploie automatiquement à chaque push sur
-   `main`, sans limite de temps sur l'offre gratuite.
+**Interface (Streamlit) :** la procédure normale est identique à celle de
+l'API — [Streamlit Community Cloud](https://share.streamlit.io), connecté à
+ce dépôt (branche `main`, fichier principal `app/app.py`, variable
+`API_URL` pointant vers l'URL Render). En pratique, un bug côté plateforme
+Streamlit Community Cloud (erreur d'association de compte, reproductible
+avec plusieurs comptes/navigateurs) a empêché d'obtenir une URL publique
+pour cette interface au moment de ce projet. L'API, elle, est bien déployée
+et accessible publiquement. En attendant, l'interface se lance en local en
+pointant directement vers l'API en ligne, ce qui donne une application
+complète et fonctionnelle de bout en bout :
+
+```bash
+cd app
+pip install -r requirements.txt
+API_URL=https://agritech-crop-api.onrender.com streamlit run app.py
+```
 
 Le job optionnel `deploy` du pipeline CI/CD (publication Docker Hub) reste
 désactivé par défaut ; voir [`docs/CI_CD.md`](docs/CI_CD.md) pour l'activer si besoin.
@@ -162,7 +169,7 @@ pytest tests/ -v
 
 ## CI/CD
 
-Voir [`docs/CI_CD.md`](docs/CI_CD.md) pour le détail du pipeline (tests → build Docker → publication Docker Hub sur `main`).
+Voir [`docs/CI_CD.md`](docs/CI_CD.md) pour le détail du pipeline (tests → build Docker → publication Docker Hub optionnelle) et de la procédure de déploiement en ligne (API sur Render, interface Streamlit).
 
 ## Choix méthodologiques principaux
 
