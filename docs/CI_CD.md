@@ -1,8 +1,6 @@
 # Pipeline CI/CD
 
-[![CI/CD - Agritech Crop Recommender](https://github.com/REMPLACER_PAR_VOTRE_USER/agritech-crop-recommender/actions/workflows/ci-cd.yml/badge.svg)](https://github.com/REMPLACER_PAR_VOTRE_USER/agritech-crop-recommender/actions/workflows/ci-cd.yml)
-
-Remplacez `REMPLACER_PAR_VOTRE_USER` par votre nom d'utilisateur GitHub une fois le dépôt créé, pour que le badge ci-dessus s'affiche correctement dans votre README.
+[![CI/CD - Agritech Crop Recommender](https://github.com/fatimaadda2878/agritech-crop-recommender/actions/workflows/ci-cd.yml/badge.svg)](https://github.com/fatimaadda2878/agritech-crop-recommender/actions/workflows/ci-cd.yml)
 
 ## Vue d'ensemble
 
@@ -13,9 +11,15 @@ flowchart LR
     A[Push / Pull Request] --> B[Job: test]
     B -->|tests OK| C[Job: build]
     C -->|image OK| D{Branche main ?}
-    D -->|oui| E[Job: deploy\nPush sur Docker Hub]
+    D -->|oui| E[Job: deploy\nPush sur Docker Hub - optionnel]
     D -->|non pull request| F[Fin - pas de déploiement]
 ```
+
+Le déploiement réel de l'application (API + interface) ne dépend pas de ce
+job Docker Hub : il est géré directement par Render et Streamlit Community
+Cloud, tous deux connectés à ce dépôt GitHub (voir section "Déploiement en
+ligne" plus bas). Le job `deploy` ci-dessous n'est qu'une démonstration
+optionnelle de publication d'image Docker.
 
 ## Déclencheurs (triggers)
 
@@ -37,13 +41,42 @@ flowchart LR
 - Construit l'image Docker de l'API à partir de `api/Dockerfile`, sans la publier.
 - Objectif : garantir que le `Dockerfile` reste valide à chaque modification du code, même sur une pull request qui ne sera pas déployée.
 
-### 3. `deploy` — Publication (uniquement sur `main`)
-- Se déclenche seulement si le push a lieu sur `main` (pas sur une pull request).
-- Se connecte à Docker Hub avec les secrets du dépôt et publie l'image taguée `latest` et avec le hash du commit.
-- **Secrets GitHub requis** (à configurer dans *Settings → Secrets and variables → Actions* du dépôt) :
-  - `DOCKERHUB_USERNAME` : votre nom d'utilisateur Docker Hub.
-  - `DOCKERHUB_TOKEN` : un [Access Token Docker Hub](https://hub.docker.com/settings/security) (ne jamais utiliser votre mot de passe).
-- **Streamlit Community Cloud** : une fois l'application connectée depuis [share.streamlit.io](https://share.streamlit.io) (en pointant vers `app/app.py` de ce dépôt), elle se redéploie automatiquement à chaque push sur `main`. Aucune étape supplémentaire n'est nécessaire dans le workflow.
+### 3. `deploy` — Publication Docker Hub (optionnelle, désactivée par défaut)
+- Se déclenche seulement si le push a lieu sur `main` **et** si la variable de
+  dépôt `ENABLE_DOCKERHUB_DEPLOY` vaut `true`. Par défaut cette variable
+  n'existe pas : le job apparaît donc en gris ("skipped"), jamais en échec.
+- Si activé, se connecte à Docker Hub avec les secrets du dépôt et publie
+  l'image taguée `latest` et avec le hash du commit.
+- **Pour l'activer** (facultatif, non nécessaire pour la mission) :
+  1. *Settings → Secrets and variables → Actions → Variables* : créer une
+     variable `ENABLE_DOCKERHUB_DEPLOY` = `true`.
+  2. *Settings → Secrets and variables → Actions → Secrets* : créer
+     `DOCKERHUB_USERNAME` (votre pseudo Docker Hub) et `DOCKERHUB_TOKEN` (un
+     [Access Token Docker Hub](https://hub.docker.com/settings/security),
+     jamais votre mot de passe).
+
+## Déploiement en ligne (gratuit, indépendant de ce job)
+
+Docker Hub n'est qu'un **entrepôt d'images** : y publier une image ne rend
+pas l'application accessible en ligne, il faudrait ensuite qu'une plateforme
+aille chercher cette image pour l'exécuter. Pour une application réellement
+accessible par une URL, ce projet est déployé directement via deux
+plateformes gratuites, connectées à ce dépôt GitHub et indépendantes du
+pipeline CI/CD :
+
+- **API (FastAPI)** sur [Render](https://render.com) : Render lit
+  `api/Dockerfile`, construit l'image et l'exécute lui-même à chaque push sur
+  `main` (offre gratuite : le service se met en veille après 15 minutes sans
+  requête, se réveille en ~1 minute au premier appel suivant).
+- **Interface (Streamlit)** : normalement déployée de la même façon sur
+  [Streamlit Community Cloud](https://share.streamlit.io) (connectée à
+  `app/app.py`, variable `API_URL` pointant vers l'API Render). Un bug
+  côté plateforme (erreur d'association de compte, non lié à ce projet) a
+  empêché d'obtenir une URL publique pour l'interface ; elle se lance donc
+  en local en pointant vers l'API déployée, ce qui reste un système complet
+  et fonctionnel de bout en bout.
+
+Voir le README, section "Déploiement en ligne", pour la procédure pas à pas.
 
 ## Bonnes pratiques appliquées
 
