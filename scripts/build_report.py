@@ -57,7 +57,7 @@ story.append(Paragraph(
     styles["CoverSubtitle"],
 ))
 story.append(Spacer(1, 3 * cm))
-story.append(Paragraph("Agritech Answers — Équipe Data Science", styles["CoverMeta"]))
+story.append(Paragraph("Fatima Adda — Data Scientist, Agritech Answers", styles["CoverMeta"]))
 story.append(Paragraph("Septembre 2026", styles["CoverMeta"]))
 story.append(Paragraph(
     "Document destiné à un public non technique : direction, équipes commerciales, agriculteurs partenaires.",
@@ -68,7 +68,7 @@ story.append(PageBreak())
 # ---------------------------------------------------------- EXEC SUMMARY ---
 story.append(Paragraph("Résumé en un coup d'œil", styles["H1"]))
 story.append(Paragraph(
-    "Nous avons construit un modèle qui estime le rendement (en tonnes par hectare) d'une "
+    "J'ai construit un modèle qui estime le rendement (en tonnes par hectare) d'une "
     "parcelle agricole à partir de ses conditions (région, sol, météo, pluviométrie, "
     "température, irrigation, engrais) et de la culture choisie. Ce modèle alimente une "
     "application où l'agriculteur peut soit <b>obtenir une estimation de rendement</b> pour "
@@ -121,9 +121,9 @@ story.append(Paragraph(
 story.append(PageBreak())
 
 # ------------------------------------------------------------- DEMARCHE ----
-story.append(Paragraph("Comment avons-nous construit ce modèle ?", styles["H1"]))
+story.append(Paragraph("Comment j'ai construit ce modèle", styles["H1"]))
 story.append(Paragraph(
-    "Nous avons combiné deux sources de données complémentaires :",
+    "J'ai combiné deux sources de données complémentaires :",
     styles["Body"],
 ))
 story.append(ListFlowable([
@@ -140,19 +140,19 @@ story.append(ListFlowable([
 
 story.append(Paragraph(
     "Ces deux sources ne pouvaient pas être combinées directement (le premier jeu de données "
-    "n'indique ni le pays ni l'année). Nous avons donc calculé, pour chaque culture, des "
+    "n'indique ni le pays ni l'année). J'ai donc calculé, pour chaque culture, des "
     "<b>valeurs de référence mondiales</b> (pluviométrie, température, pesticides moyens) à "
-    "partir des données FAO, puis nous les avons associées à chaque parcelle selon sa culture. "
-    "Cela nous permet de savoir si une parcelle est plus ou moins arrosée/chaude que la "
+    "partir des données FAO, puis je les ai associées à chaque parcelle selon sa culture. "
+    "Cela permet de savoir si une parcelle est plus ou moins arrosée/chaude que la "
     "moyenne mondiale pour sa culture — une information utile pour le modèle. Deux cultures "
-    "(orge et coton) n'ayant pas d'équivalent dans les données mondiales disponibles, nous "
-    "leur avons appliqué la moyenne mondiale tous produits confondus, une limitation "
+    "(orge et coton) n'ayant pas d'équivalent dans les données mondiales disponibles, je "
+    "leur ai appliqué la moyenne mondiale tous produits confondus, une limitation "
     "documentée dans le notebook technique.",
     styles["Body"],
 ))
 
 story.append(Paragraph(
-    "Nous avons aussi vérifié la qualité des données : 231 valeurs de rendement négatives "
+    "J'ai aussi vérifié la qualité des données : 231 valeurs de rendement négatives "
     "(impossibles physiquement, dues à du bruit de mesure/simulation) ont été ramenées à 0, "
     "et 2 310 lignes dupliquées ont été supprimées des données mondiales. Après ce nettoyage, "
     "le jeu de données final ne contient aucune valeur manquante.",
@@ -161,7 +161,7 @@ story.append(Paragraph(
 
 story.append(Paragraph("Identifier les variables qui comptent vraiment (ACP)", styles["H2"]))
 story.append(Paragraph(
-    "Pour savoir quelles variables influencent le plus le rendement, nous avons utilisé une "
+    "Pour savoir quelles variables influencent le plus le rendement, j'ai utilisé une "
     "méthode statistique appelée <b>analyse en composantes principales</b> (ACP). Le principe : "
     "elle regarde toutes les variables en même temps et identifie celles qui expliquent le "
     "plus les différences observées entre les parcelles, en éliminant les redondances.",
@@ -219,7 +219,7 @@ story.append(PageBreak())
 # ------------------------------------------------------------- RESULTATS ---
 story.append(Paragraph("Résultats du modèle", styles["H1"]))
 story.append(Paragraph(
-    "Nous avons comparé 3 approches de modélisation avant d'optimiser la meilleure, en "
+    "J'ai comparé 3 approches de modélisation avant d'optimiser la meilleure, en "
     "utilisant un échantillon de 200 000 parcelles (sur les 1 000 000 disponibles, ce qui est "
     "largement suffisant pour obtenir des résultats stables et fiables) :",
     styles["Body"],
@@ -251,7 +251,7 @@ story.append(Paragraph(
     "part de variabilité du rendement que le modèle parvient à expliquer : 91,5 % est un très "
     "bon score. Les 3 approches obtiennent des résultats très proches, ce qui indique que la "
     "relation entre les conditions de parcelle et le rendement est majoritairement simple "
-    "(linéaire) sur ce jeu de données — nous avons donc retenu et optimisé la régression "
+    "(linéaire) sur ce jeu de données — j'ai donc retenu et optimisé la régression "
     "Ridge, plus simple et donc plus facile à interpréter et à maintenir, pour une précision "
     "équivalente.",
     styles["Body"],
@@ -262,7 +262,7 @@ story.append(Paragraph(
     "Chaque modèle entraîné et chaque combinaison de paramètres testée (8 configurations "
     "différentes pour l'optimisation) a été enregistré automatiquement dans l'outil MLflow, "
     "qui conserve l'historique complet des expérimentations : paramètres utilisés, métriques "
-    "obtenues, et modèle associé. Cela garantit la traçabilité et la reproductibilité de nos "
+    "obtenues, et modèle associé. Cela garantit la traçabilité et la reproductibilité de mes "
     "résultats.",
     styles["Body"],
 ))
@@ -328,8 +328,7 @@ story.append(ListFlowable([
 
 story.append(Spacer(1, 20))
 story.append(Paragraph(
-    "Pour toute question sur ce rapport ou sur l'application, l'équipe Data Science reste "
-    "disponible.",
+    "Pour toute question sur ce rapport ou sur l'application, je reste disponible.",
     styles["Body"],
 ))
 
@@ -341,7 +340,7 @@ doc = SimpleDocTemplate(
     leftMargin=2 * cm,
     rightMargin=2 * cm,
     title="Rapport métier - Agritech Answers",
-    author="Agritech Answers - Équipe Data Science",
+    author="Fatima Adda - Agritech Answers",
 )
 doc.build(story)
 print("Rapport généré : reports/rapport_metier.pdf")
