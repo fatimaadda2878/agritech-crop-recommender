@@ -37,8 +37,8 @@ styles.add(ParagraphStyle("H2", fontSize=13, leading=17, textColor=GREEN, fontNa
 styles.add(ParagraphStyle("Body", fontSize=10.3, leading=15, textColor=DARK, spaceAfter=8, alignment=4))
 styles.add(ParagraphStyle("BodyBold", parent=styles["Body"], fontName="Helvetica-Bold"))
 styles.add(ParagraphStyle("Caption", fontSize=9, leading=12, textColor=GREY, alignment=1, spaceAfter=14, fontName="Helvetica-Oblique"))
-styles.add(ParagraphStyle("KpiLabel", fontSize=9.5, textColor=GREY, alignment=1))
-styles.add(ParagraphStyle("KpiValue", fontSize=20, textColor=GREEN, fontName="Helvetica-Bold", alignment=1, spaceAfter=2))
+styles.add(ParagraphStyle("KpiLabel", fontSize=9.5, leading=12, textColor=GREY, alignment=1))
+styles.add(ParagraphStyle("KpiValue", fontSize=20, leading=24, textColor=GREEN, fontName="Helvetica-Bold", alignment=1, spaceAfter=2))
 styles.add(ParagraphStyle("BulletItem", parent=styles["Body"], spaceAfter=4))
 
 story = []
@@ -72,8 +72,10 @@ story.append(Paragraph(
     "parcelle agricole à partir de ses conditions (région, sol, météo, pluviométrie, "
     "température, irrigation, engrais) et de la culture choisie. Ce modèle alimente une "
     "application où l'agriculteur peut soit <b>obtenir une estimation de rendement</b> pour "
-    "une culture qu'il a déjà choisie, soit <b>se faire recommander la culture la plus "
-    "rentable</b> parmi 6 possibles, selon les conditions de sa parcelle.",
+    "une culture qu'il a déjà choisie, soit <b>obtenir un classement indicatif des 6 "
+    "cultures possibles</b> selon leur rendement estimé pour les conditions de sa parcelle. "
+    "Ce classement porte sur le rendement, pas sur la rentabilité (prix de vente et coûts "
+    "de production ne sont pas pris en compte).",
     styles["Body"],
 ))
 
@@ -290,9 +292,14 @@ story.append(ListFlowable([
         "de sol.", styles["BulletItem"])),
     ListItem(Paragraph(
         "<b>Utiliser l'outil de recommandation comme aide à la décision, pas comme verdict "
-        "unique.</b> Sur les données actuelles, les 6 cultures affichent des rendements très "
-        "proches : le choix de culture doit aussi intégrer d'autres critères non couverts ici "
-        "(prix de vente, coûts de production, rotation des cultures, débouchés commerciaux).",
+        "unique.</b> Sur les données actuelles, les 6 cultures affichent des rendements "
+        "estimés très proches, souvent à quelques centièmes de tonne par hectare, alors que "
+        "l'erreur moyenne du modèle est d'environ 0,50 t/ha. Le classement ne permet donc "
+        "généralement pas d'affirmer qu'une culture donnera un meilleur rendement qu'une "
+        "autre : l'application le signale explicitement lorsque les écarts sont plus faibles "
+        "que cette erreur. Le choix de culture doit aussi intégrer d'autres critères non "
+        "couverts ici (prix de vente, coûts de production, rotation des cultures, débouchés "
+        "commerciaux).",
         styles["BulletItem"])),
     ListItem(Paragraph(
         "<b>Surveiller l'écart à la normale climatique de la culture</b> (pluviométrie et "
