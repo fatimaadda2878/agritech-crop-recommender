@@ -2,8 +2,8 @@
 
 Application d'aide à la décision pour les agriculteurs, développée pour **Agritech Answers**. Elle combine :
 
-- une **fonction de prédiction** : rendement estimé (t/ha) pour une culture choisie, selon les conditions d'une parcelle ;
-- une **fonction de recommandation** : classement **indicatif** des 6 cultures possibles (blé, orge, coton, maïs, riz, soja) par rendement estimé, pour les conditions d'une parcelle donnée.
+- une **fonction de prédiction** : rendement estimé (t/ha) pour une culture choisie, selon les conditions d'une parcelle
+- une **fonction de recommandation** : classement **indicatif** des 6 cultures possibles (blé, orge, coton, maïs, riz, soja) par rendement estimé, pour les conditions d'une parcelle donnée
 
 > ⚠️ **Portée de la recommandation.** Le classement porte uniquement sur le rendement estimé (t/ha), pas sur la rentabilité : les prix de vente et les coûts de production ne sont pas connus du modèle. De plus, les écarts entre cultures sont souvent de quelques centièmes de t/ha, alors que l'erreur moyenne du modèle (RMSE) est d'environ 0,50 t/ha. Quand l'écart entre deux cultures est plus faible que cette erreur, l'application les présente comme équivalentes plutôt que de désigner une gagnante.
 
