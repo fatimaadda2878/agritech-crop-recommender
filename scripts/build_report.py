@@ -23,10 +23,21 @@ DARK = colors.HexColor("#1f2d24")
 GREY = colors.HexColor("#5a5a5a")
 LIGHT_BG = colors.HexColor("#eef5f0")
 
-with open("models/model_metadata.json") as f:
-    metadata = json.load(f)
+import csv
 
-metrics = metadata["metrics"]
+# Fichiers versionnés dans le dépôt (écrits par src/train.py)
+with open("api/models/model_metadata.json", encoding="utf-8") as f:
+    metadata = json.load(f)
+with open("reports/model_comparison.csv", encoding="utf-8") as f:
+    comparison = {row["name"]: row for row in csv.DictReader(f)}
+
+metrics = metadata["metrics"]          # évaluation finale unique sur le jeu de test
+cv_metrics = metadata["cv_metrics"]    # validation croisée du modèle retenu
+
+
+def fr(x, nd=3):
+    """Nombre au format français."""
+    return f"{float(x):.{nd}f}".replace(".", ",")
 
 styles = getSampleStyleSheet()
 styles.add(ParagraphStyle("CoverTitle", fontSize=28, leading=34, textColor=DARK, fontName="Helvetica-Bold", spaceAfter=10))
@@ -159,49 +170,58 @@ story.append(Paragraph(
     styles["Body"],
 ))
 
-story.append(Paragraph("Identifier les variables qui comptent vraiment (ACP)", styles["H2"]))
+story.append(PageBreak())
+story.append(Paragraph("Identifier les variables qui comptent vraiment (ACP)", styles["H1"]))
 story.append(Paragraph(
-    "Pour savoir quelles variables influencent le plus le rendement, j'ai utilisé une "
-    "méthode statistique appelée <b>analyse en composantes principales</b> (ACP). Le principe : "
-    "elle regarde toutes les variables en même temps et identifie celles qui expliquent le "
-    "plus les différences observées entre les parcelles, en éliminant les redondances.",
+    "Pour comprendre comment les variables s'organisent, j'ai utilisé une méthode "
+    "statistique appelée <b>analyse en composantes principales</b> (ACP). Elle résume "
+    "les nombreuses variables décrivant une parcelle en quelques grands « axes » qui "
+    "regroupent les variables liées entre elles. Le rendement, qui est ce que l'on "
+    "cherche à expliquer, n'a volontairement <b>pas</b> servi à construire ces axes : "
+    "il a été placé ensuite sur les graphiques, pour voir de quels axes il est proche "
+    "sans qu'il influence leur construction.",
     styles["Body"],
 ))
 
-img1 = Image("reports/fig_pca_cercle_correlations.png", width=7.5 * cm, height=7.5 * cm)
-img2 = Image("reports/fig_pca_scree.png", width=7.5 * cm, height=7.5 * cm * (484/784))
-tbl_imgs = Table([[img1, img2]], colWidths=[7.5 * cm, 7.5 * cm])
+img1 = Image("reports/fig_pca_cercle_correlations.png", width=7.4 * cm, height=7.4 * cm)
+img2 = Image("reports/fig_pca_cercle_F3_F5.png", width=7.4 * cm, height=7.4 * cm)
+tbl_imgs = Table([[img1, img2]], colWidths=[7.9 * cm, 7.9 * cm])
 tbl_imgs.setStyle(TableStyle([("VALIGN", (0, 0), (-1, -1), "TOP")]))
-story.append(Spacer(1, 6))
+story.append(Spacer(1, 4))
 story.append(KeepTogether([
     tbl_imgs,
     Paragraph(
-        "À gauche : le « cercle des corrélations », qui montre comment les variables se "
-        "regroupent. À droite : la part de variabilité expliquée par chaque axe (les 2 premiers "
-        "axes suffisent à résumer une grande partie de l'information).",
+        "Chaque flèche rouge représente une variable ; la flèche bleue en pointillés est le "
+        "rendement, ajouté après coup. Plus une flèche est longue, mieux la variable est "
+        "représentée sur le graphique. À gauche, les deux axes principaux : le profil mondial "
+        "de la culture (horizontal) et la température (vertical). Le rendement y est à peine "
+        "visible. À droite, l'axe de la pluviométrie (horizontal) et celui de l'irrigation "
+        "(vertical), vers lesquels le rendement pointe nettement.",
         styles["Caption"],
     ),
     Paragraph(
-        "Conclusion de cette analyse : le rendement ne dépend pas d'une seule variable dominante, "
-        "mais d'une combinaison de facteurs — ce qui justifie l'usage d'un modèle statistique "
-        "plutôt que d'une règle simple, et confirme l'importance de variables comme l'irrigation, "
-        "l'engrais et le type de sol.",
+        "<b>Conclusion de cette analyse :</b> les axes qui résument le plus d'information sur "
+        "les parcelles (le profil de la culture, la température) ne sont pas ceux qui "
+        "expliquent le rendement. Le rendement est surtout lié à la <b>pluviométrie</b> de la "
+        "parcelle, puis à l'<b>irrigation</b> et à l'<b>engrais</b>. Le choix de la culture "
+        "compte très peu.",
         styles["Body"],
     ),
 ]))
-story.append(PageBreak())
 
 # ------------------------------------------------------- VARIABLES CLES ----
+story.append(PageBreak())
 story.append(Paragraph("Les variables clés expliquées", styles["H1"]))
 var_table_data = [
     [Paragraph("<b>Variable</b>", styles["BodyBold"]), Paragraph("<b>Ce que c'est</b>", styles["BodyBold"]), Paragraph("<b>Impact observé</b>", styles["BodyBold"])],
-    [Paragraph("Irrigation", styles["Body"]), Paragraph("La parcelle est-elle irriguée artificiellement ?", styles["Body"]), Paragraph("Très fort : +1,20 t/ha en moyenne", styles["Body"])],
     [Paragraph("Engrais", styles["Body"]), Paragraph("De l'engrais est-il apporté à la parcelle ?", styles["Body"]), Paragraph("Très fort : +1,50 t/ha en moyenne", styles["Body"])],
+    [Paragraph("Irrigation", styles["Body"]), Paragraph("La parcelle est-elle irriguée artificiellement ?", styles["Body"]), Paragraph("Très fort : +1,20 t/ha en moyenne", styles["Body"])],
+    [Paragraph("Pluviométrie", styles["Body"]), Paragraph("Quantité de pluie reçue par la parcelle sur l'année (100 à 1 000 mm)", styles["Body"]), Paragraph("Fort : environ +0,5 t/ha par tranche de 100 mm supplémentaires", styles["Body"])],
+    [Paragraph("Température", styles["Body"]), Paragraph("Température moyenne de la parcelle (15 à 40 °C)", styles["Body"]), Paragraph("Faible : environ +0,2 t/ha pour 10 °C de plus", styles["Body"])],
     [Paragraph("Culture", styles["Body"]), Paragraph("Blé, orge, coton, maïs, riz ou soja", styles["Body"]), Paragraph("Faible sur ce jeu de données (écart &lt; 0,02 t/ha entre cultures)", styles["Body"])],
     [Paragraph("Type de sol", styles["Body"]), Paragraph("Sableux, argileux, limoneux, silto-argileux, tourbeux, calcaire", styles["Body"]), Paragraph("Faible (écart &lt; 0,01 t/ha)", styles["Body"])],
-    [Paragraph("Écart de pluviométrie", styles["Body"]), Paragraph("Différence entre la pluviométrie de la parcelle et la moyenne mondiale pour sa culture", styles["Body"]), Paragraph("Modéré, capté par le modèle", styles["Body"])],
-    [Paragraph("Écart de température", styles["Body"]), Paragraph("Différence entre la température de la parcelle et la moyenne mondiale pour sa culture", styles["Body"]), Paragraph("Modéré, capté par le modèle", styles["Body"])],
-    [Paragraph("Jours avant récolte", styles["Body"]), Paragraph("Durée du cycle de culture jusqu'à la récolte", styles["Body"]), Paragraph("Modéré", styles["Body"])],
+    [Paragraph("Jours avant récolte", styles["Body"]), Paragraph("Durée du cycle de culture jusqu'à la récolte", styles["Body"]), Paragraph("Négligeable", styles["Body"])],
+    [Paragraph("Écarts à la moyenne mondiale", styles["Body"]), Paragraph("Différence entre la pluie (ou la température) de la parcelle et la moyenne mondiale pour sa culture", styles["Body"]), Paragraph("Pas d'effet propre : ils reprennent l'information de la pluviométrie et de la température de la parcelle", styles["Body"])],
 ]
 var_table = Table(var_table_data, colWidths=[3.3 * cm, 7.2 * cm, 6.2 * cm], repeatRows=1)
 var_table.setStyle(TableStyle([
@@ -219,59 +239,101 @@ story.append(PageBreak())
 # ------------------------------------------------------------- RESULTATS ---
 story.append(Paragraph("Résultats du modèle", styles["H1"]))
 story.append(Paragraph(
-    "J'ai comparé 3 approches de modélisation avant d'optimiser la meilleure, en "
-    "utilisant un échantillon de 200 000 parcelles (sur les 1 000 000 disponibles, ce qui est "
-    "largement suffisant pour obtenir des résultats stables et fiables) :",
+    "J'ai travaillé sur un échantillon de 200 000 parcelles (sur les 1 000 000 disponibles, "
+    "ce qui suffit largement pour obtenir des résultats stables). Pour que le score final "
+    "soit honnête, j'ai d'abord mis de côté <b>20 % des parcelles</b> (le jeu de test), "
+    "auxquelles le modèle n'a jamais eu accès pendant sa mise au point :",
     styles["Body"],
 ))
+story.append(ListFlowable([
+    ListItem(Paragraph(
+        "<b>Choix du modèle</b> : j'ai comparé 3 approches par <b>validation croisée</b> sur "
+        "les 80 % restants. Les données sont découpées en 5 parts ; chaque approche est "
+        "entraînée 5 fois sur 4 parts et évaluée sur la cinquième, et l'on fait la moyenne.",
+        styles["BulletItem"])),
+    ListItem(Paragraph(
+        "<b>Réglage</b> : j'ai ensuite testé plusieurs réglages de la meilleure approche, "
+        "toujours par validation croisée.", styles["BulletItem"])),
+    ListItem(Paragraph(
+        "<b>Évaluation finale</b> : le modèle retenu est évalué <b>une seule fois</b> sur les "
+        "20 % mis de côté. Ce score n'a servi à aucun choix.", styles["BulletItem"])),
+], bulletType="bullet", start="•"))
 
-comp_data = [
-    [Paragraph("<b>Modèle</b>", styles["BodyBold"]), Paragraph("<b>Erreur moyenne (RMSE, t/ha)</b>", styles["BodyBold"]), Paragraph("<b>Variabilité expliquée (R<super>2</super>)</b>", styles["BodyBold"])],
-    ["Régression linéaire", "0,499", "91,5 %"],
-    ["Forêt aléatoire (Random Forest)", "0,504", "91,3 %"],
-    ["Gradient Boosting", "0,500", "91,5 %"],
-    [Paragraph("<b>Régression Ridge optimisée (retenue)</b>", styles["BodyBold"]), Paragraph(f"<b>{metrics['rmse']:.3f}</b>".replace(".", ","), styles["BodyBold"]), Paragraph(f"<b>{metrics['r2']*100:.1f} %</b>".replace(".", ","), styles["BodyBold"])],
+model_labels = [
+    ("linear_regression", "Régression linéaire"),
+    ("random_forest", "Forêt aléatoire (Random Forest)"),
+    ("hist_gradient_boosting", "Gradient Boosting"),
+    ("ridge_regression", "Régression Ridge (réglage de la régression linéaire)"),
 ]
-comp_table = Table(comp_data, colWidths=[7 * cm, 5 * cm, 4.7 * cm])
+comp_data = [[
+    Paragraph("<b>Modèle</b>", styles["BodyBold"]),
+    Paragraph("<b>Erreur moyenne en validation croisée (RMSE, t/ha)</b>", styles["BodyBold"]),
+    Paragraph("<b>Variabilité expliquée (R<super>2</super>)</b>", styles["BodyBold"]),
+]]
+for key, label in model_labels:
+    row = comparison[key]
+    style = styles["BodyBold"] if key == metadata["best_model_type"] else styles["Body"]
+    suffix = " — retenu" if key == metadata["best_model_type"] else ""
+    comp_data.append([
+        Paragraph(label + suffix, style),
+        Paragraph(f"{fr(row['cv_rmse_mean'])} ± {fr(row['cv_rmse_std'])}", style),
+        Paragraph(f"{float(row['cv_r2_mean']) * 100:.1f} %".replace(".", ","), style),
+    ])
+comp_table = Table(comp_data, colWidths=[7 * cm, 5.3 * cm, 4.4 * cm])
+best_row = 1 + [k for k, _ in model_labels].index(metadata["best_model_type"])
 comp_table.setStyle(TableStyle([
     ("BACKGROUND", (0, 0), (-1, 0), GREEN),
     ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
     ("GRID", (0, 0), (-1, -1), 0.5, colors.HexColor("#cccccc")),
     ("ALIGN", (1, 0), (-1, -1), "CENTER"),
-    ("BACKGROUND", (0, -1), (-1, -1), LIGHT_BG),
+    ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
+    ("BACKGROUND", (0, best_row), (-1, best_row), LIGHT_BG),
     ("TOPPADDING", (0, 0), (-1, -1), 6),
     ("BOTTOMPADDING", (0, 0), (-1, -1), 6),
 ]))
 story.append(comp_table)
 story.append(Spacer(1, 8))
 story.append(Paragraph(
+    f"<b>Évaluation finale sur le jeu de test (régression linéaire) :</b> erreur moyenne "
+    f"(RMSE) de <b>{fr(metrics['rmse'])} t/ha</b>, variabilité expliquée (R<super>2</super>) de "
+    f"<b>{fr(metrics['r2'] * 100, 1)} %</b>.",
+    styles["Body"],
+))
+story.append(Paragraph(
     "<b>Comment lire ces chiffres ?</b> Le RMSE indique l'erreur moyenne du modèle : une "
     "valeur de 0,50 t/ha signifie que l'estimation se trompe en moyenne de 0,50 tonne par "
-    "hectare (sur des rendements qui varient entre 0 et 10 t/ha environ). Le R<super>2</super> indique la "
-    "part de variabilité du rendement que le modèle parvient à expliquer : 91,5 % est un très "
-    "bon score. Les 3 approches obtiennent des résultats très proches, ce qui indique que la "
-    "relation entre les conditions de parcelle et le rendement est majoritairement simple "
-    "(linéaire) sur ce jeu de données — j'ai donc retenu et optimisé la régression "
-    "Ridge, plus simple et donc plus facile à interpréter et à maintenir, pour une précision "
-    "équivalente.",
+    "hectare (sur des rendements qui varient entre 0 et 10 t/ha environ). Le R<super>2</super> "
+    "indique la part des différences de rendement entre parcelles que le modèle parvient à "
+    "expliquer : environ 91 % est un très bon score. Le score final sur le test est très "
+    "proche de celui de la validation croisée : le modèle se comporte aussi bien sur des "
+    "parcelles qu'il n'a jamais vues.",
+    styles["Body"],
+))
+story.append(Paragraph(
+    "<b>Quel modèle retenir ?</b> Les 3 approches obtiennent des scores presque identiques : "
+    "la relation entre les conditions de la parcelle et le rendement est essentiellement "
+    "simple (linéaire), et les modèles plus complexes n'apportent rien. Le réglage testé "
+    "ensuite (la régression Ridge) <b>n'améliore pratiquement pas</b> la régression linéaire "
+    "de départ. J'ai donc gardé la <b>régression linéaire</b>, le modèle le plus simple, le "
+    "plus facile à expliquer et à maintenir.",
     styles["Body"],
 ))
 
+story.append(PageBreak())
 story.append(Paragraph("Suivi des expérimentations avec MLflow", styles["H2"]))
 story.append(Paragraph(
-    "Chaque modèle entraîné et chaque combinaison de paramètres testée (8 configurations "
-    "différentes pour l'optimisation) a été enregistré automatiquement dans l'outil MLflow, "
-    "qui conserve l'historique complet des expérimentations : paramètres utilisés, métriques "
-    "obtenues, et modèle associé. Cela garantit la traçabilité et la reproductibilité de mes "
-    "résultats.",
+    "Chaque étape a été enregistrée automatiquement dans l'outil MLflow : la validation "
+    "croisée de chaque modèle comparé, les 8 réglages testés pour la régression Ridge, puis "
+    "l'évaluation finale du modèle retenu sur le jeu de test. MLflow conserve l'historique "
+    "complet des expérimentations (paramètres utilisés, scores obtenus, modèle associé), "
+    "ce qui garantit la traçabilité et la reproductibilité de mes résultats.",
     styles["Body"],
 ))
-story.append(PageBreak())
 
 for img_path, caption in [
-    ("mlflow_screenshots/01_mlflow_experiments.png", "Page d'accueil MLflow : l'expérience « crop_yield_prediction » regroupe l'ensemble des runs de ce projet."),
-    ("mlflow_screenshots/02_mlflow_runs_list.png", "Liste des runs d'entraînement avec leurs métriques (MAE, R<super>2</super>) et le type de modèle testé."),
-    ("mlflow_screenshots/03_mlflow_run_detail.png", "Détail du meilleur run : métriques, paramètres optimaux retenus (alpha=1,0, solveur cholesky) et modèle enregistré."),
+    ("mlflow_screenshots/01_mlflow_experiments.png", "Liste des expériences MLflow : l'expérience « crop_yield_prediction » regroupe l'ensemble des runs de ce projet."),
+    ("mlflow_screenshots/02_mlflow_runs_list.png", "Liste des runs : validation croisée des 3 modèles comparés (cv_), recherche de réglages de la régression Ridge (tuning_), puis évaluation finale unique sur le jeu de test (final_, colonnes test_)."),
+    ("mlflow_screenshots/03_mlflow_run_detail.png", "Détail du run final : le modèle retenu (régression linéaire), ses scores sur le jeu de test et la justification du choix."),
 ]:
     im = Image(img_path)
     ratio = im.imageHeight / im.imageWidth
@@ -302,9 +364,9 @@ story.append(ListFlowable([
         "commerciaux).",
         styles["BulletItem"])),
     ListItem(Paragraph(
-        "<b>Surveiller l'écart à la normale climatique de la culture</b> (pluviométrie et "
-        "température par rapport à la moyenne mondiale) : ces écarts, calculés automatiquement "
-        "par l'outil, sont des indicateurs utiles pour anticiper un risque de sous-rendement.",
+        "<b>Tenir compte de la pluviométrie.</b> C'est le facteur naturel le plus lié au "
+        "rendement (environ +0,5 t/ha par tranche de 100 mm de pluie par an). Sur les "
+        "parcelles peu arrosées, l'irrigation est d'autant plus utile pour compenser.",
         styles["BulletItem"])),
     ListItem(Paragraph(
         "<b>Enrichir les données à l'avenir</b> avec des quantités réelles de pesticides et "
@@ -324,6 +386,11 @@ story.append(ListFlowable([
         "Le modèle a été entraîné sur un échantillon de 200 000 parcelles simulées ; une "
         "validation sur des données réelles de terrain reste recommandée avant un déploiement "
         "à grande échelle.", styles["BulletItem"])),
+    ListItem(Paragraph(
+        "La mise à jour de l'application n'est pas encore entièrement automatique : le "
+        "réentraînement du modèle se lance à la main, et l'interface en ligne est mise à jour "
+        "sans attendre la réussite des tests automatiques (l'API, elle, les attend). Le détail "
+        "figure dans la documentation technique du projet.", styles["BulletItem"])),
 ], bulletType="bullet", start="•"))
 
 story.append(Spacer(1, 20))

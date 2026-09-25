@@ -1,15 +1,20 @@
 {
-  "best_model_type": "ridge_regression",
-  "best_params": {
-    "model__solver": "cholesky",
-    "model__alpha": 1.0
-  },
+  "best_model_type": "linear_regression",
+  "best_params": {},
+  "selection_note": "L'optimisation (ridge_regression) n'améliore pratiquement pas le RMSE de validation croisée (gain de 0.00000 t/ha, sous le seuil de 0.001 t/ha) : le modèle de base, plus simple (linear_regression), est retenu.",
   "metrics": {
-    "rmse": 0.4987183172292971,
-    "mae": 0.39799960139051266,
-    "r2": 0.9150686897507445
+    "rmse": 0.498717598898528,
+    "mae": 0.39799880011735506,
+    "r2": 0.9150689344128208
   },
-  "mlflow_run_id": "cfc72ecf220f484cb05a6a011e82f3ad",
+  "cv_metrics": {
+    "cv_rmse_mean": 0.49864289337216716,
+    "cv_rmse_std": 0.003147169561197833,
+    "cv_mae_mean": 0.3975386946955506,
+    "cv_r2_mean": 0.9137038707763644
+  },
+  "evaluation_protocol": "Comparaison et optimisation par validation croisée à 5 plis sur le jeu d'entraînement (80 %), évaluation finale unique sur le jeu de test (20 %).",
+  "mlflow_run_id": "18ac5cae51f1458f8ddb1214cc5b11a0",
   "mlflow_experiment": "crop_yield_prediction",
   "feature_columns": [
     "Rainfall_mm",
@@ -55,7 +60,8 @@
     "Rainy",
     "Sunny"
   ],
-  "trained_on_rows": 200000,
+  "trained_on_rows": 160000,
+  "test_rows": 40000,
   "trained_on_total_dataset_rows": 1000000,
   "seed": 42
 }

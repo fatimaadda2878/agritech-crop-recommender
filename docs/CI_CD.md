@@ -15,11 +15,13 @@ flowchart LR
     D -->|non pull request| F[Fin - pas de déploiement]
 ```
 
-Le déploiement réel de l'application (API + interface) ne dépend pas de ce
+Le déploiement réel de l'application (API + interface) ne passe pas par ce
 job Docker Hub : il est géré directement par Render et Streamlit Community
-Cloud, tous deux connectés à ce dépôt GitHub (voir section "Déploiement en
-ligne" plus bas). Le job `deploy` ci-dessous n'est qu'une démonstration
-optionnelle de publication d'image Docker.
+Cloud, tous deux connectés à ce dépôt GitHub (voir "Déploiement en ligne"
+plus bas). Le job `deploy` ci-dessous n'est qu'une démonstration optionnelle
+de publication d'image Docker. Les liens entre les tests GitHub et ces
+déploiements, et leurs limites, sont détaillés dans la section
+"Limites du pipeline".
 
 ## Déclencheurs (triggers)
 
@@ -55,33 +57,67 @@ optionnelle de publication d'image Docker.
      [Access Token Docker Hub](https://hub.docker.com/settings/security),
      jamais votre mot de passe).
 
-## Déploiement en ligne (gratuit, indépendant de ce job)
+## Déploiement en ligne
 
 Docker Hub n'est qu'un **entrepôt d'images** : y publier une image ne rend
-pas l'application accessible en ligne, il faudrait ensuite qu'une plateforme
-aille chercher cette image pour l'exécuter. Pour une application réellement
-accessible par une URL, ce projet est déployé directement via deux
-plateformes gratuites, connectées à ce dépôt GitHub et indépendantes du
-pipeline CI/CD :
+pas l'application accessible en ligne. Le projet est donc déployé sur deux
+plateformes gratuites, connectées directement à ce dépôt GitHub :
 
 - **API (FastAPI)** sur [Render](https://render.com) : Render lit
-  `api/Dockerfile`, construit l'image et l'exécute lui-même à chaque push sur
-  `main` (offre gratuite : le service se met en veille après 15 minutes sans
-  requête, se réveille en ~1 minute au premier appel suivant).
-- **Interface (Streamlit)** : normalement déployée de la même façon sur
-  [Streamlit Community Cloud](https://share.streamlit.io) (connectée à
-  `app/app.py`, variable `API_URL` pointant vers l'API Render). Un bug
-  côté plateforme (erreur d'association de compte, non lié à ce projet) a
-  empêché d'obtenir une URL publique pour l'interface ; elle se lance donc
-  en local en pointant vers l'API déployée, ce qui reste un système complet
-  et fonctionnel de bout en bout.
+  `api/Dockerfile`, construit l'image et l'exécute. Le service est réglé en
+  *Auto-Deploy : After CI Checks Pass* : un push sur `main` n'est déployé que
+  si les jobs GitHub Actions (tests et build) ont réussi. Offre gratuite : le
+  service se met en veille après 15 minutes sans requête et se réveille en
+  environ 1 minute au premier appel suivant.
+- **Interface (Streamlit)** sur
+  [Streamlit Community Cloud](https://share.streamlit.io) : connectée à
+  `app/app.py`, elle se redéploie à chaque push sur `main`. Le secret
+  `API_URL` pointe vers l'URL Render de l'API. Application en ligne :
+  [https://agritech-crop-recommender-api.streamlit.app/](https://agritech-crop-recommender-api.streamlit.app/).
 
 Voir le README, section "Déploiement en ligne", pour la procédure pas à pas.
+
+## Limites du pipeline
+
+Le pipeline automatise les tests et la construction de l'image, mais il ne
+couvre pas toute la chaîne, de l'entraînement jusqu'à la mise en ligne :
+
+1. **Le modèle n'est pas réentraîné par le pipeline.** L'entraînement
+   (`python src/train.py`) se lance à la main, en local : les données brutes
+   (environ 100 Mo) ne sont pas versionnées dans Git et l'entraînement complet
+   prend plusieurs minutes. À la fin, `train.py` copie automatiquement le
+   modèle, ses métadonnées et les benchmarks dans `api/models/`. Ce dossier,
+   versionné dans Git, est ce que l'API sert. Un nouveau modèle n'est donc mis
+   en production que lorsque ces fichiers sont commités puis poussés. Les
+   tests vérifient alors que l'API fonctionne avec ce modèle, mais aucune
+   vérification automatique ne contrôle que ses performances ne se sont pas
+   dégradées.
+2. **Les déploiements sont déclenchés par les plateformes, pas par le
+   pipeline.** Render et Streamlit Community Cloud surveillent eux-mêmes la
+   branche `main` :
+   - **Render (API)** attend la réussite des jobs GitHub Actions grâce au
+     réglage *After CI Checks Pass* (*Settings → Build & Deploy →
+     Auto-Deploy*). Sans ce réglage (mode par défaut *On Commit*), l'API
+     serait redéployée à chaque push, même si les tests échouent.
+   - **Streamlit Community Cloud (interface)** ne propose pas cette option :
+     l'interface est redéployée à chaque push sur `main`, que les tests
+     passent ou non. Le risque reste limité, car l'interface ne contient
+     aucune logique de Machine Learning et ne fait qu'appeler l'API.
+
+**Pistes d'amélioration :**
+- déclencher le déploiement Render depuis le pipeline, après les tests, via
+  son *Deploy Hook* (une URL propre au service, à stocker dans un secret
+  GitHub) ;
+- ajouter au pipeline un job qui vérifie les performances du modèle commité
+  (par exemple un RMSE maximal sur un petit jeu de validation versionné),
+  pour bloquer un modèle dégradé ;
+- à plus long terme, stocker les données et les modèles hors de Git (DVC,
+  registre de modèles MLflow) pour pouvoir réentraîner automatiquement.
 
 ## Bonnes pratiques appliquées
 
 - **Aucun secret en clair** : les identifiants Docker Hub sont lus depuis les secrets GitHub, jamais écrits dans le code.
-- **Échec explicite** : chaque étape critique (tests, build) fait échouer le job entier si elle échoue, empêchant un déploiement basé sur du code cassé.
+- **Échec explicite** : chaque étape critique (tests, build) fait échouer le job entier si elle échoue. Côté API, Render ne déploie qu'après la réussite de ces jobs (voir "Limites du pipeline" pour l'interface).
 - **Cache des layers Docker** (`cache-from`/`cache-to: type=gha`) pour accélérer les builds successifs.
 - **Reproductibilité** : versions de Python et des dépendances figées (`requirements.txt`).
 
