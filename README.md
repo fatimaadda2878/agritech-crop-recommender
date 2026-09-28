@@ -5,14 +5,14 @@ Application d'aide à la décision pour les agriculteurs, développée pour **Ag
 - une **fonction de prédiction** : rendement estimé (t/ha) pour une culture choisie, selon les conditions d'une parcelle ;
 - une **fonction de recommandation** : classement **indicatif** des 6 cultures possibles (blé, orge, coton, maïs, riz, soja) par rendement estimé, pour les conditions d'une parcelle donnée.
 
-> ⚠️ **Portée de la recommandation.** Le classement porte uniquement sur le rendement estimé (t/ha), pas sur la rentabilité : les prix de vente et les coûts de production ne sont pas connus du modèle. De plus, les écarts entre cultures sont souvent de quelques centièmes de t/ha, alors que l'erreur moyenne du modèle (RMSE) est d'environ 0,50 t/ha. Quand l'écart entre deux cultures est plus faible que cette erreur, l'application les présente comme équivalentes plutôt que de désigner une gagnante.
+> ⚠️ **Portée de la recommandation.** Le classement porte uniquement sur le rendement estimé (t/ha), pas sur la rentabilité : les prix de vente et les coûts de production ne sont pas connus du modèle. De plus, les écarts entre cultures sont souvent de quelques centièmes de t/ha, alors que l'erreur typique du modèle (RMSE) est d'environ 0,50 t/ha. Ce RMSE donne un ordre de grandeur de l'erreur, pas un intervalle de confiance garanti. Quand l'écart entre deux cultures est plus faible que cet ordre de grandeur, l'application les présente comme équivalentes plutôt que de désigner une gagnante.
 
 [![CI/CD - Agritech Crop Recommender](https://github.com/fatimaadda2878/agritech-crop-recommender/actions/workflows/ci-cd.yml/badge.svg)](https://github.com/fatimaadda2878/agritech-crop-recommender/actions/workflows/ci-cd.yml)
 
 ## 🚀 Démo en ligne
 
 - **Application (Streamlit Community Cloud) : [https://agritech-crop-recommender-api.streamlit.app/](https://agritech-crop-recommender-api.streamlit.app/)**
-  Interface agriculteur : renseigner les conditions de la parcelle dans le panneau de gauche, puis choisir *Prédiction* (rendement d'une culture) ou *Recommandation* (classement indicatif des 6 cultures, avec la marge d'erreur du modèle).
+  Interface agriculteur : renseigner les conditions de la parcelle dans le panneau de gauche, puis choisir *Prédiction* (rendement d'une culture) ou *Recommandation* (classement indicatif des 6 cultures, avec l'erreur typique du modèle).
 - **API (Render) : [https://agritech-crop-api.onrender.com/docs](https://agritech-crop-api.onrender.com/docs)**
   Documentation interactive (Swagger) : ouvrir `/predict` ou `/recommend`, cliquer sur *Try it out*, modifier les valeurs d'exemple puis *Execute*.
 
@@ -194,7 +194,8 @@ Voir [`docs/CI_CD.md`](docs/CI_CD.md) pour le détail du pipeline (tests → bui
 - **ACP** : réalisée sur les seules variables explicatives. Le rendement, variable à expliquer, n'est pas utilisé pour construire les axes : il est projeté ensuite comme variable illustrative. Il est surtout lié à l'axe de la pluviométrie, puis à ceux de l'irrigation et de l'engrais.
 - **Échantillonnage d'entraînement** : 200 000 parcelles (sur 1 000 000), un choix documenté dans `src/train.py` et justifié par la stabilité des métriques obtenues.
 - **Protocole d'évaluation** : l'échantillon est séparé une seule fois en entraînement (80 %) et test (20 %). Les modèles sont comparés, et leurs hyperparamètres recherchés, par **validation croisée à 5 plis sur le jeu d'entraînement uniquement**. Le jeu de test ne sert qu'à **une seule évaluation finale** du modèle retenu.
-- **Modèle retenu** : **régression linéaire** (RMSE en validation croisée : 0,499 ± 0,003 t/ha ; évaluation finale sur le test : RMSE 0,499 t/ha, R² 0,915). La Random Forest (0,503) et le Gradient Boosting (0,500) ne font pas mieux. La régression Ridge testée à l'étape d'optimisation n'améliore pratiquement pas la régression linéaire (gain inférieur à 0,00001 t/ha) : le modèle le plus simple est donc conservé.
+- **Variables du modèle** : toutes les variables du dataset consolidé sauf `temperature_gap_c`, qui vaut exactement `Temperature_Celsius - world_avg_temp_c`. Cette combinaison linéaire n'apporte aucune information (les prédictions sont identiques avec ou sans elle) et rendrait les coefficients de la régression non identifiables ; elle est donc exclue explicitement dans `src/train.py`, mais reste utilisée dans l'exploration et l'ACP. Les moyennes mondiales FAO étant constantes pour une culture donnée, leur effet se confond avec celui de la culture : l'effet de la culture se mesure en comparant les prédictions entre cultures (écart maximal d'environ 0,01 t/ha), pas en lisant un coefficient isolé.
+- **Modèle retenu** : **régression linéaire** (RMSE en validation croisée : 0,499 t/ha, écart-type de 0,003 entre les 5 plis ; évaluation finale sur le test : RMSE 0,499 t/ha, MAE 0,398 t/ha, R² 0,915 ; le RMSE est un ordre de grandeur de l'erreur, pas un intervalle garanti). La Random Forest (0,503) et le Gradient Boosting (0,500) ne font pas mieux. La régression Ridge testée à l'étape d'optimisation n'améliore pratiquement pas la régression linéaire (gain inférieur à 0,00001 t/ha) : le modèle le plus simple est donc conservé.
 
 ## Limites du pipeline
 

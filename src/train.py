@@ -86,6 +86,18 @@ MIN_RMSE_GAIN = 0.001
 
 MLFLOW_EXPERIMENT = "crop_yield_prediction"
 
+# Variables numériques exclues du modèle.
+# temperature_gap_c vaut exactement Temperature_Celsius - world_avg_temp_c : c'est
+# une combinaison linéaire de deux variables déjà présentes. Elle n'apporte aucune
+# information au modèle (vérifié : avec ou sans elle, les prédictions de la
+# régression linéaire sont identiques) et rendrait ses coefficients non
+# identifiables (colinéarité parfaite). Elle reste utilisée dans l'exploration
+# et l'ACP du notebook.
+# rainfall_gap_pct, elle, est un rapport (écart relatif en %) : ce n'est pas une
+# combinaison linéaire des autres variables, elle est donc conservée.
+EXCLUDED_NUMERIC_FEATURES = ["temperature_gap_c"]
+MODEL_NUMERIC_FEATURES = [c for c in FEATURE_COLUMNS_NUMERIC if c not in EXCLUDED_NUMERIC_FEATURES]
+
 CV_SCORING = {
     "rmse": "neg_root_mean_squared_error",
     "mae": "neg_mean_absolute_error",
@@ -99,7 +111,7 @@ def build_preprocessor() -> ColumnTransformer:
 
     preprocessor = ColumnTransformer(
         transformers=[
-            ("num", numeric_transformer, FEATURE_COLUMNS_NUMERIC[:-1]),  # sans la target
+            ("num", numeric_transformer, MODEL_NUMERIC_FEATURES),
             ("bool", "passthrough", FEATURE_COLUMNS_BOOL),
             ("cat", categorical_transformer, FEATURE_COLUMNS_CATEGORICAL),
         ]
@@ -194,7 +206,7 @@ def main():
     df_sample = sample_data(df, SAMPLE_SIZE)
     print(f"Dataset total: {n_total} lignes | échantillon: {len(df_sample)} lignes")
 
-    feature_cols = FEATURE_COLUMNS_NUMERIC[:-1] + FEATURE_COLUMNS_BOOL + FEATURE_COLUMNS_CATEGORICAL
+    feature_cols = MODEL_NUMERIC_FEATURES + FEATURE_COLUMNS_BOOL + FEATURE_COLUMNS_CATEGORICAL
     X = df_sample[feature_cols]
     y = df_sample[TARGET_COLUMN]
 

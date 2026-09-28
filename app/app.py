@@ -110,8 +110,9 @@ def main():
                 value=f"{result['predicted_yield_t_ha']:.2f} t/ha",
             )
             st.caption(
-                f"Erreur moyenne du modèle (RMSE) : environ ± {model_rmse:.2f} t/ha. "
-                "Le rendement réel peut donc s'écarter de cette estimation."
+                f"Erreur typique du modèle (RMSE) : environ {model_rmse:.2f} t/ha. C'est un "
+                "ordre de grandeur de l'écart entre l'estimation et le rendement réel, pas "
+                "une marge garantie : pour certaines parcelles, l'écart peut être plus grand."
             )
 
     else:
@@ -124,10 +125,10 @@ def main():
         st.info(
             "Ce classement est **indicatif**. Il porte uniquement sur le **rendement "
             "(t/ha)**, pas sur la rentabilité : les prix de vente et les coûts de "
-            "production ne sont pas pris en compte. De plus, le modèle a une erreur "
-            f"moyenne d'environ ± {model_rmse:.2f} t/ha : deux cultures dont les "
-            "rendements estimés sont plus proches que cette erreur ne peuvent pas être "
-            "départagées."
+            "production ne sont pas pris en compte. De plus, l'erreur typique du modèle "
+            f"(RMSE) est d'environ {model_rmse:.2f} t/ha : quand deux cultures ont des "
+            "rendements estimés plus proches que cet ordre de grandeur, le modèle ne "
+            "permet pas de les départager de façon fiable."
         )
 
         if st.button("Obtenir la recommandation", type="primary"):
@@ -155,8 +156,8 @@ def main():
                     f"**Pas de différence nette entre les cultures.** Les rendements estimés "
                     f"vont de {recos['predicted_yield_t_ha'].min():.2f} à "
                     f"{recos['predicted_yield_t_ha'].max():.2f} t/ha, soit un écart de "
-                    f"{spread:.2f} t/ha, plus faible que l'erreur du modèle "
-                    f"(± {model_rmse:.2f} t/ha). Dans ces conditions, les données ne "
+                    f"{spread:.2f} t/ha, bien plus faible que l'erreur typique du modèle "
+                    f"(RMSE d'environ {model_rmse:.2f} t/ha). Dans ces conditions, les données ne "
                     "permettent pas de dire qu'une culture donnera un meilleur rendement "
                     "qu'une autre : le choix peut se faire sur d'autres critères (prix, "
                     "coûts, débouchés, rotation des cultures)."
@@ -166,8 +167,8 @@ def main():
                 st.info(
                     f"**{best['crop']}** a le rendement estimé le plus élevé "
                     f"({best['predicted_yield_t_ha']:.2f} t/ha), mais son avance sur "
-                    f"{others} est plus faible que l'erreur du modèle "
-                    f"(± {model_rmse:.2f} t/ha) : ces cultures sont à considérer comme "
+                    f"{others} est plus faible que l'erreur typique du modèle "
+                    f"(RMSE d'environ {model_rmse:.2f} t/ha) : ces cultures sont à considérer comme "
                     "équivalentes en rendement."
                 )
             else:
@@ -176,8 +177,8 @@ def main():
                     f"**{best['crop']}** a le rendement estimé le plus élevé "
                     f"({best['predicted_yield_t_ha']:.2f} t/ha), avec une avance de "
                     f"{best['predicted_yield_t_ha'] - second['predicted_yield_t_ha']:.2f} t/ha "
-                    f"sur {second['crop']}, supérieure à l'erreur du modèle "
-                    f"(± {model_rmse:.2f} t/ha). Ce résultat reste indicatif et ne tient "
+                    f"sur {second['crop']}, supérieure à l'erreur typique du modèle "
+                    f"(RMSE d'environ {model_rmse:.2f} t/ha). Ce résultat reste indicatif et ne tient "
                     "pas compte de la rentabilité."
                 )
 
@@ -199,7 +200,7 @@ def main():
                         "crop": "Culture",
                         "predicted_yield_t_ha": "Rendement estimé (t/ha)",
                         "gap_to_first": "Écart avec la 1re (t/ha)",
-                        "distinct": "Écart > erreur du modèle ?",
+                        "distinct": "Écart > erreur typique (RMSE) ?",
                     }
                 ).set_index("Rang"),
                 column_config={
@@ -210,8 +211,8 @@ def main():
             )
             st.caption(
                 "Lecture : « Non » signifie que l'écart avec la culture classée première "
-                "est plus faible que l'erreur du modèle, les deux cultures ne peuvent donc "
-                "pas être départagées."
+                "est plus faible que l'erreur typique du modèle (RMSE) : le modèle ne permet "
+                "pas de départager ces deux cultures de façon fiable."
             )
 
 if __name__ == "__main__":

@@ -99,7 +99,7 @@ kpi_data = [
     ],
     [
         Paragraph("de la variabilité du<br/>rendement est expliquée<br/>par le modèle", styles["KpiLabel"]),
-        Paragraph("d'erreur moyenne<br/>sur l'estimation<br/>de rendement", styles["KpiLabel"]),
+        Paragraph("d'erreur typique<br/>(RMSE) sur l'estimation<br/>de rendement", styles["KpiLabel"]),
         Paragraph("parcelles analysées<br/>pour entraîner<br/>le modèle", styles["KpiLabel"]),
         Paragraph("cultures couvertes<br/>par le moteur de<br/>recommandation", styles["KpiLabel"]),
     ],
@@ -267,7 +267,7 @@ model_labels = [
 ]
 comp_data = [[
     Paragraph("<b>Modèle</b>", styles["BodyBold"]),
-    Paragraph("<b>Erreur moyenne en validation croisée (RMSE, t/ha)</b>", styles["BodyBold"]),
+    Paragraph("<b>Erreur typique en validation croisée (RMSE, t/ha)*</b>", styles["BodyBold"]),
     Paragraph("<b>Variabilité expliquée (R<super>2</super>)</b>", styles["BodyBold"]),
 ]]
 for key, label in model_labels:
@@ -292,17 +292,23 @@ comp_table.setStyle(TableStyle([
     ("BOTTOMPADDING", (0, 0), (-1, -1), 6),
 ]))
 story.append(comp_table)
-story.append(Spacer(1, 8))
 story.append(Paragraph(
-    f"<b>Évaluation finale sur le jeu de test (régression linéaire) :</b> erreur moyenne "
-    f"(RMSE) de <b>{fr(metrics['rmse'])} t/ha</b>, variabilité expliquée (R<super>2</super>) de "
+    "* moyenne sur les 5 plis de la validation croisée ± écart-type entre les plis.",
+    styles["Caption"],
+))
+story.append(Paragraph(
+    f"<b>Évaluation finale sur le jeu de test (régression linéaire) :</b> erreur typique "
+    f"(RMSE) de <b>{fr(metrics['rmse'])} t/ha</b>, erreur absolue moyenne (MAE) de "
+    f"<b>{fr(metrics['mae'])} t/ha</b>, variabilité expliquée (R<super>2</super>) de "
     f"<b>{fr(metrics['r2'] * 100, 1)} %</b>.",
     styles["Body"],
 ))
 story.append(Paragraph(
-    "<b>Comment lire ces chiffres ?</b> Le RMSE indique l'erreur moyenne du modèle : une "
-    "valeur de 0,50 t/ha signifie que l'estimation se trompe en moyenne de 0,50 tonne par "
-    "hectare (sur des rendements qui varient entre 0 et 10 t/ha environ). Le R<super>2</super> "
+    "<b>Comment lire ces chiffres ?</b> Le RMSE donne l'<b>ordre de grandeur</b> de l'erreur "
+    "du modèle : les estimations s'écartent typiquement d'environ 0,5 tonne par hectare du "
+    "rendement réel (sur des rendements qui varient entre 0 et 10 t/ha environ). Ce n'est "
+    "pas une marge garantie de ± 0,50 t/ha : pour certaines parcelles, l'écart peut être plus "
+    "grand. La MAE (0,40 t/ha) est l'écart moyen en valeur absolue. Le R<super>2</super> "
     "indique la part des différences de rendement entre parcelles que le modèle parvient à "
     "expliquer : environ 91 % est un très bon score. Le score final sur le test est très "
     "proche de celui de la validation croisée : le modèle se comporte aussi bien sur des "
@@ -356,10 +362,10 @@ story.append(ListFlowable([
         "<b>Utiliser l'outil de recommandation comme aide à la décision, pas comme verdict "
         "unique.</b> Sur les données actuelles, les 6 cultures affichent des rendements "
         "estimés très proches, souvent à quelques centièmes de tonne par hectare, alors que "
-        "l'erreur moyenne du modèle est d'environ 0,50 t/ha. Le classement ne permet donc "
+        "l'erreur typique du modèle (RMSE) est d'environ 0,50 t/ha. Le classement ne permet donc "
         "généralement pas d'affirmer qu'une culture donnera un meilleur rendement qu'une "
         "autre : l'application le signale explicitement lorsque les écarts sont plus faibles "
-        "que cette erreur. Le choix de culture doit aussi intégrer d'autres critères non "
+        "que cet ordre de grandeur. Le choix de culture doit aussi intégrer d'autres critères non "
         "couverts ici (prix de vente, coûts de production, rotation des cultures, débouchés "
         "commerciaux).",
         styles["BulletItem"])),
